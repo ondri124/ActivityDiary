@@ -60,6 +60,8 @@ public class HistoryRecyclerViewAdapter extends RecyclerView.Adapter<HistoryView
 
     private SelectListener mListener;
 
+    private int lastdayoftheweek;
+
     @Override
     public void onDetailItemClick(int adapterPosition) {
         Toast.makeText(mContext, "history picture " + Integer.toString(adapterPosition) +  " clicked", Toast.LENGTH_LONG).show();
@@ -104,6 +106,7 @@ public class HistoryRecyclerViewAdapter extends RecyclerView.Adapter<HistoryView
         mListener = listener;
         mContext = context;
         mViewHolders = new ArrayList<>(17);
+        lastdayoftheweek = Calendar.getInstance().getFirstDayOfWeek() == Calendar.MONDAY ? Calendar.SUNDAY:Calendar.SATURDAY;
 
         mDataObserver = new DataSetObserver(){
             public void onChanged() {
@@ -144,6 +147,7 @@ public class HistoryRecyclerViewAdapter extends RecyclerView.Adapter<HistoryView
         Date end;
         String name = mCursor.getString(nameRowIdx);
         int color = mCursor.getInt(colorRowIdx);
+        // TODO: strike activity name if activity is deleted
 
         holder.mBackground.setBackgroundColor(color);
         holder.mName.setTextColor(GraphicsHelper.textColorOnBackground(color));
@@ -181,11 +185,19 @@ public class HistoryRecyclerViewAdapter extends RecyclerView.Adapter<HistoryView
                 SimpleDateFormat formatter = new SimpleDateFormat("EEEE");
                 header = formatter.format(start);
             }else if(now.get(Calendar.WEEK_OF_YEAR) - startCal.get(Calendar.WEEK_OF_YEAR) == 1){
-                header = mContext.getResources().getString(R.string.lastWeek);
-                    /* TODO: this is shown for each day last week, which is too much... -> refactor to get rid of showHeader or set it in this if-elsif-chain */
+                if(startCal.get(Calendar.DAY_OF_WEEK) == lastdayoftheweek) {
+                    header = mContext.getResources().getString(R.string.lastWeek);
+                }else{
+                    showHeader = false;
+                }
             }else{
-                SimpleDateFormat formatter = new SimpleDateFormat("MMMMM yyyy");
-                header = formatter.format(start);
+                if(startCal.getActualMaximum(Calendar.DAY_OF_MONTH)
+                        ==  startCal.get(Calendar.DAY_OF_MONTH)) {
+                    SimpleDateFormat formatter = new SimpleDateFormat("MMMM yyyy");
+                    header = formatter.format(start);
+                }else{
+                    showHeader = false;
+                }
             }
         }
         if(showHeader) {
@@ -216,6 +228,7 @@ public class HistoryRecyclerViewAdapter extends RecyclerView.Adapter<HistoryView
         String duration = mContext.getResources().
                 getString(R.string.duration_description, FuzzyTimeSpanFormatter.format(start, end));
 //TODO        do not use FuzzyTimeSpanFormatter here, but use xx sec for <1min yy min for <1h hh:mm otherwise
+        // seconds_short, minutes_short or full time "HH:MM:SS"
 
         holder.mDurationLabel.setText(duration);
 
