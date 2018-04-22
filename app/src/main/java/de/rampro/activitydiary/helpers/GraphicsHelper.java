@@ -108,6 +108,9 @@ public class GraphicsHelper {
                 default:
                     return 0;
             }
+        } catch (SecurityException e){
+            Log.e(TAG, "reading image (for exif rotation) failed due to permissions", e);
+            return 0;
         } catch (IOException e) {
             Log.e(TAG, "reading image failed (for exif rotation)", e);
             return 0;

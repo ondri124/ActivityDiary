@@ -51,12 +51,12 @@ public class DayTimeCondition extends Condition implements ActivityHelper.DataCh
                         + "AVG(  (   (    strftime('%s'," + ActivityDiaryContract.Diary.TABLE_NAME + "." + ActivityDiaryContract.Diary.START
                         +                      "/1000, 'unixepoch')"
                         +             " - strftime('%s',datetime(" + ActivityDiaryContract.Diary.TABLE_NAME + "." + ActivityDiaryContract.Diary.START
-                        +                      "/1000, 'unixepoch', 'start of day'))"
+                        +                      "/1000, 'unixepoch', 'start of day'), 'utc')"
                         +           ") - sub.m"
                         +      " )*( (    strftime('%s'," + ActivityDiaryContract.Diary.TABLE_NAME + "." + ActivityDiaryContract.Diary.START
                         +                      "/1000, 'unixepoch')"
                         +             " - strftime('%s',datetime(" + ActivityDiaryContract.Diary.TABLE_NAME + "." + ActivityDiaryContract.Diary.START
-                        +                      "/1000, 'unixepoch', 'start of day'))"
+                        +                      "/1000, 'unixepoch', 'start of day'), 'utc')"
                         +           ") - sub.m"
                         +         ")"
                         +    ") as var "
@@ -65,7 +65,7 @@ public class DayTimeCondition extends Condition implements ActivityHelper.DataCh
                         + "   AVG(    strftime('%s'," + ActivityDiaryContract.Diary.START
                         +                      "/1000, 'unixepoch')"
                         +             " - strftime('%s',datetime(" + ActivityDiaryContract.Diary.START
-                        +                      "/1000, 'unixepoch', 'start of day'))"
+                        +                      "/1000, 'unixepoch', 'start of day'), 'utc')"
                         +        ") as m "
                         + " FROM " + ActivityDiaryContract.Diary.TABLE_NAME + " GROUP BY " + ActivityDiaryContract.Diary.ACT_ID + ") as sub "
                         + "WHERE " + ActivityDiaryContract.Diary.TABLE_NAME + "." + ActivityDiaryContract.Diary.ACT_ID + "=sub." + ActivityDiaryContract.Diary.ACT_ID
@@ -122,7 +122,7 @@ public class DayTimeCondition extends Condition implements ActivityHelper.DataCh
                 float dist = Math.min(delta, DAY - delta);
                 */
 
-                double ld = DAY / Math.sqrt(2 * Math.PI * var);
+                double ld = (DAY / 4) / Math.sqrt(2 * Math.PI * var);
                 ld = ld * Math.exp(-((now - mean) * (now - mean) / (2 * var)));
 
                 ld = ld * weight;

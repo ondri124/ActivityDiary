@@ -24,9 +24,11 @@ import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
 
+import java.text.DecimalFormat;
 import java.util.List;
 
 import de.rampro.activitydiary.R;
+import de.rampro.activitydiary.helpers.ActivityHelper;
 import de.rampro.activitydiary.helpers.GraphicsHelper;
 import de.rampro.activitydiary.model.DiaryActivity;
 

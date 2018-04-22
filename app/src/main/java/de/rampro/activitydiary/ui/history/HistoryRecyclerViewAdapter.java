@@ -19,11 +19,14 @@
 
 package de.rampro.activitydiary.ui.history;
 
+import android.app.Activity;
+import android.app.Application;
 import android.content.ContentValues;
 import android.content.DialogInterface;
 import android.content.SharedPreferences;
 import android.database.Cursor;
 import android.database.DataSetObserver;
+import android.graphics.Point;
 import android.support.v7.app.AlertDialog;
 import android.support.v7.preference.PreferenceManager;
 import android.support.v7.widget.RecyclerView;
@@ -96,7 +99,20 @@ public class HistoryRecyclerViewAdapter extends RecyclerView.Adapter<HistoryView
         return true;
     }
 
+    public void updateEditMode(boolean editMode) {
+        for(HistoryViewHolders viewHolder : mViewHolders){
+            if(editMode) {
+                viewHolder.mResizeBtn.setVisibility(View.VISIBLE);
+                viewHolder.mInsertBtn.setVisibility(View.VISIBLE);
+            }else{
+                viewHolder.mResizeBtn.setVisibility(View.GONE);
+                viewHolder.mInsertBtn.setVisibility(View.GONE);
+            }
+        }
+    }
+
     public interface SelectListener{
+        void onInsertItemClick(HistoryViewHolders viewHolder, int adapterPosition, int diaryID);
         void onItemClick(HistoryViewHolders viewHolder, int adapterPosition, int diaryID);
         boolean onItemLongClick(HistoryViewHolders viewHolder, int adapterPosition, int diaryID);
     }
@@ -201,10 +217,10 @@ public class HistoryRecyclerViewAdapter extends RecyclerView.Adapter<HistoryView
             }
         }
         if(showHeader) {
-            holder.mSeparator.setVisibility(View.VISIBLE);
-            holder.mSeparator.setText(header);
+            holder.mHeader.setVisibility(View.VISIBLE);
+            holder.mHeader.setText(header);
         }else{
-            holder.mSeparator.setVisibility(View.GONE);
+            holder.mHeader.setVisibility(View.GONE);
         }
 
         holder.mName.setText(name);
@@ -243,6 +259,23 @@ public class HistoryRecyclerViewAdapter extends RecyclerView.Adapter<HistoryView
         holder.mImageRecycler.setLayoutManager(layoutMan);
         holder.mImageRecycler.setAdapter(holder.mDetailAdapter);
         /* click handlers are done via ViewHolder */
+        int screenHeight, minHeight;
+
+        Point size = new Point();
+        mContext.getWindowManager().getDefaultDisplay().getRealSize(size);
+        screenHeight = size.y;
+        screenHeight = (screenHeight * 80) / 100; // we consider only 80% of the screen height
+
+        minHeight = holder.mBackground.getHeight() + holder.mNoteLabel.getHeight()
+                + holder.mDurationLabel.getHeight() * 2 + holder.mStartLabel.getHeight() * 2;
+
+        long durationSec = (mCursor.getLong(endRowIdx) - mCursor.getLong(startRowIdx)) / 1000;
+
+        int h = (int)(Math.log(durationSec / 500) / Math.log(60 * 60 * 24 / 500) * (screenHeight - minHeight)) + minHeight;
+
+        if (h > screenHeight) h = screenHeight;
+
+        holder.mMainView.setMinimumHeight(1 * h);
     }
 
     @Override

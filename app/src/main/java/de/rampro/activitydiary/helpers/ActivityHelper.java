@@ -104,6 +104,9 @@ public class ActivityHelper extends AsyncQueryHandler{
 
     /* list of all activities, not including deleted ones */
     private List<DiaryActivity> activities;
+    /* map from activities to their current likelyhood */
+    private HashMap<DiaryActivity, Double> activityLikelihoods = new HashMap<>(2);
+
     private DiaryActivity mCurrentActivity = null;
     private Date mCurrentActivityStartTime;
     private Uri mCurrentDiaryUri;
@@ -641,34 +644,34 @@ public class ActivityHelper extends AsyncQueryHandler{
     public void reorderActivites(){
         synchronized (this) {
             List<DiaryActivity> as = activities;
-            HashMap<DiaryActivity, Double> likeliActivites = new HashMap<>(as.size());
+            activityLikelihoods = new HashMap<>(as.size());
 
             for (DiaryActivity a : as) {
-                likeliActivites.put(a, Double.valueOf(0.0));
+                activityLikelihoods.put(a, Double.valueOf(0.0));
             }
 
             // reevaluate the conditions
             for (Condition c : conditions) {
                 List<Condition.Likelihood> s = c.likelihoods();
                 for (Condition.Likelihood l : s) {
-                    if (!likeliActivites.containsKey(l.activity)) {
+                    if (!activityLikelihoods.containsKey(l.activity)) {
                         Log.e(TAG, "Activity " + l.activity + " not in likeliActivites " + as.contains(l.activity));
                     }
-                    Double lv = likeliActivites.get(l.activity);
+                    Double lv = activityLikelihoods.get(l.activity);
                     if (lv == null) {
                         Log.e(TAG, "Activity " + l.activity + " has no likelyhood in Condition " + c.getClass().getSimpleName());
                     } else {
-                        likeliActivites.put(l.activity, lv + l.likelihood);
+                        activityLikelihoods.put(l.activity, lv + l.likelihood);
                     }
                 }
             }
 
-            List<DiaryActivity> list = new ArrayList<DiaryActivity>(likeliActivites.keySet());
+            List<DiaryActivity> list = new ArrayList<DiaryActivity>(activityLikelihoods.keySet());
 
             Collections.sort(list, Collections.reverseOrder(new Comparator<DiaryActivity>() {
                 public int compare(DiaryActivity o1,
                                    DiaryActivity o2) {
-                    return likeliActivites.get(o1).compareTo(likeliActivites.get(o2));
+                    return activityLikelihoods.get(o1).compareTo(activityLikelihoods.get(o2));
                 }
             }));
             activities = list;

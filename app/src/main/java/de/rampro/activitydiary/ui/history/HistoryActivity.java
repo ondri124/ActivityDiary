@@ -70,6 +70,12 @@ public class HistoryActivity extends BaseActivity implements
 
     private HistoryRecyclerViewAdapter historyAdapter;
     private DetailRecyclerViewAdapter detailAdapters[];
+    private boolean mEditMode;
+
+    @Override
+    public void onInsertItemClick(HistoryViewHolders viewHolder, int adapterPosition, int diaryID) {
+        Toast.makeText(HistoryActivity.this, "inserting after " + viewHolder.mName.getText(), Toast.LENGTH_LONG).show();
+    }
 
     @Override
     public void onItemClick(HistoryViewHolders viewHolder, int adapterPosition, int diaryID) {
@@ -126,9 +132,8 @@ public class HistoryActivity extends BaseActivity implements
     @Override
     public boolean onCreateOptionsMenu(Menu menu) {
         MenuInflater inflater = getMenuInflater();
-        /* todo change menu */
+        inflater.inflate(R.menu.diary_menu, menu);
         /* TODO #25: ADD a search */
-/*        inflater.inflate(R.menu.manage_menu, menu);*/
         return true;
     }
 
@@ -136,9 +141,16 @@ public class HistoryActivity extends BaseActivity implements
     public boolean onOptionsItemSelected(MenuItem item) {
         // Handle your other action bar items...
         switch(item.getItemId()) {
-            case R.id.action_add_activity:
-                Intent intentaddact = new Intent(HistoryActivity.this, EditActivity.class);
-                startActivity(intentaddact);
+            case R.id.action_edit_mode:
+                mEditMode = !mEditMode;
+                if(mEditMode){
+                    item.setIcon(R.drawable.ic_delete);
+                    item.setTitle(R.string.nav_view_diary);
+                }else{
+                    item.setIcon(R.drawable.ic_edit);
+                    item.setTitle(R.string.nav_edit_diary);
+                }
+                historyAdapter.updateEditMode(mEditMode);
                 break;
             case android.R.id.home:
                 finish();

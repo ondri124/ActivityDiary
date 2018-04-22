@@ -137,6 +137,8 @@
     <string name="action_undo">UNDO</string>
     <string name="search_hint">Search activity&#8230;</string>
     <string name="search_description">Diaryactivities</string>
+    <string name="nav_edit_diary">Edit mode</string>
+    <string name="nav_view_diary">View mode</string>
 
     <!-- dialog -->
     <string name="dlg_ok">OK</string>
