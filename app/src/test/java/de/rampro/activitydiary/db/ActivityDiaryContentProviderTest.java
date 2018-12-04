@@ -20,38 +20,52 @@
 package de.rampro.activitydiary.db;
 
 
+import android.app.Application;
 import android.content.ContentResolver;
 import android.content.ContentValues;
+import android.content.Context;
 import android.database.Cursor;
+import android.database.sqlite.SQLiteDatabase;
 import android.net.Uri;
 
+
+import org.junit.After;
 import org.junit.Before;
 import org.junit.Test;
 import org.junit.runner.RunWith;
+import org.robolectric.Robolectric;
 import org.robolectric.RobolectricTestRunner;
 import org.robolectric.RuntimeEnvironment;
+import org.robolectric.Shadows;
 import org.robolectric.annotation.Config;
+import org.robolectric.shadows.ShadowApplication;
 import org.robolectric.shadows.ShadowContentResolver;
 
+import java.net.URI;
 import java.util.Date;
 
+import de.rampro.activitydiary.ActivityDiaryApplication;
 import de.rampro.activitydiary.BuildConfig;
+import de.rampro.activitydiary.helpers.ActivityHelper;
+import de.rampro.activitydiary.ui.history.HistoryActivity;
 
+import static org.junit.Assert.assertArrayEquals;
+import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNotNull;
+import static org.junit.Assert.assertNull;
 import static org.junit.Assert.assertTrue;
 
 @RunWith(RobolectricTestRunner.class)
 @Config(constants = BuildConfig.class)
-public class ActivityDiaryContentProviderTest {
+public class ActivityDiaryContentProviderTest extends ActivityDiaryApplication {
     ContentResolver contentResolver;
 
     @Before
     public void setup() {
+
         ActivityDiaryContentProvider provider = new ActivityDiaryContentProvider();
         provider.onCreate();
-//        ShadowContentResolver.registerProviderInternal(
-//                ActivityDiaryContract.AUTHORITY, provider
-//        );
+
         contentResolver = RuntimeEnvironment.application.getContentResolver();
     }
 
@@ -172,4 +186,79 @@ public class ActivityDiaryContentProviderTest {
         assertTrue("name suffix", name.endsWith("-TestSuffix"));
     }
 
+    @Test
+    public void searchRecentSuggestionTest() throws Exception {
+        ContentValues vals = new ContentValues();
+
+        Uri uri = ActivityDiaryContract.DiarySearchSuggestion.CONTENT_URI;
+        vals.put(ActivityDiaryContract.DiarySearchSuggestion.SUGGESTION, "Swimming");
+        contentResolver.insert(uri, vals);
+
+        uri = Uri.parse("content://de.rampro.activitydiary.debug.provider/history/search_suggest_query/?limit=50");
+        Cursor cursor = contentResolver.query(uri, null, null, null, null);
+        String data = getCursordata(cursor);
+        assertEquals("Swimming", data);
+    }
+
+    @Test
+    public void unrecognizedUriTest() throws Exception {
+        Uri uri = Uri.parse("content://de.rampro.activitydiary.debug.provider/history/fail/?limit=50");
+        assertNull(contentResolver.query(uri, null, null, null, null));
+        uri = Uri.parse("");
+        assertNull(contentResolver.query(uri, null, null, null, null));
+    }
+
+    @Test
+    public void deleteDuplicateSuggestionTest() throws Exception{
+
+        ContentValues vals = new ContentValues();
+
+        Uri uri = ActivityDiaryContract.DiarySearchSuggestion.CONTENT_URI;
+        vals.put(ActivityDiaryContract.DiarySearchSuggestion.SUGGESTION, "Swimming");
+        contentResolver.insert(uri, vals);
+
+        contentResolver.delete(uri, ActivityDiaryContract.DiarySearchSuggestion.SUGGESTION + " LIKE 'Swimming' AND ", null);
+
+        uri = Uri.parse("content://de.rampro.activitydiary.debug.provider/history/search_suggest_query/?limit=50");
+        Cursor cursor = contentResolver.query(uri, null, null, null, null);
+        String data = getCursordata(cursor);
+        assertNull(data);
+    }
+
+
+    @Test
+    public void reduceSuggestionTest() throws Exception{
+        ContentValues vals = new ContentValues();
+        int SEARCH_SUGGESTION_DISPLAY_COUNT = 5;
+
+        Uri uri = ActivityDiaryContract.DiarySearchSuggestion.CONTENT_URI;
+        Uri suggestionUri = Uri.parse("content://de.rampro.activitydiary.debug.provider/history/search_suggest_query/?limit=50");
+        Cursor cursor = null;
+
+        for (int i = 0; i  < 50; i++){
+            vals.put(ActivityDiaryContract.DiarySearchSuggestion.SUGGESTION, "test" + i);
+            contentResolver.insert(uri, vals);
+
+            contentResolver.delete(uri, ActivityDiaryContract.DiarySearchSuggestion._ID +
+                    " IN (SELECT " + ActivityDiaryContract.DiarySearchSuggestion._ID +
+                    " FROM " + ActivityDiaryContract.DiarySearchSuggestion.TABLE_NAME +
+                    " ORDER BY " + ActivityDiaryContract.DiarySearchSuggestion._ID + " DESC LIMIT " + SEARCH_SUGGESTION_DISPLAY_COUNT + ",1)", null);
+
+            cursor = contentResolver.query(suggestionUri, null, null, null, null);
+            assertTrue(cursor.getCount() < 6);
+        }
+    }
+
+    private String getCursordata(Cursor cursor){
+        String data = null;
+        if(cursor != null) {
+            if (cursor.moveToFirst()) {
+                do {
+                    data = cursor.getString(cursor.getColumnIndex("suggest_text_1"));
+                    // do what ever you want here
+                } while (cursor.moveToNext());
+            }
+        }
+        return data;
+    }
 }

@@ -200,13 +200,18 @@ public class HistoryActivity extends BaseActivity implements
         /*
             if query was searched, then insert query into suggestion table
          */
+        suggestionHandle(query);
+    }
+
+
+    public void suggestionHandle(String query){
         if (query != null) {
 
-            String URL = "content://" + ActivityDiaryContract.AUTHORITY + ActivityDiaryContract.DiarySearchSuggestion.CONTENT_URI.getPath();
-            Uri uri = Uri.parse(URL);
+            Uri uri = ActivityDiaryContract.DiarySearchSuggestion.CONTENT_URI;
+
             ContentValues values = new ContentValues();
 
-            getContentResolver().delete(uri, ActivityDiaryContract.DiarySearchSuggestion.SUGGESTION + " LIKE '" + query + "'", null);
+            getContentResolver().delete(uri, ActivityDiaryContract.DiarySearchSuggestion.SUGGESTION + " LIKE '" + query + "' AND ", null);
 
             values.put(ActivityDiaryContract.DiarySearchSuggestion.SUGGESTION, query);
             getContentResolver().insert(uri, values);

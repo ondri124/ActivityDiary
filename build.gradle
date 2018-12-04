@@ -9,13 +9,47 @@ buildscript {
         }
     }
     dependencies {
-        classpath 'com.android.tools.build:gradle:3.1.4'
+        classpath 'com.android.tools.build:gradle:3.2.1'
+        classpath('com.dicedmelon.gradle:jacoco-android:0.1.2') {
+            exclude group: 'org.codehaus.groovy', module: 'groovy-all'
+        }
 
         // NOTE: Do not place your application dependencies here; they belong
         // in the individual module build.gradle files
         if (project.file('ActivityDiarySigning.properties').exists()) {
             classpath 'com.github.triplet.gradle:play-publisher:1.2.2'
         }
+    }
+}
+
+plugins {
+    id "org.sonarqube" version "2.6.2"
+}
+
+
+sonarqube {
+    properties {
+        property "sonar.projectKey", "com.ActivityDiary"
+        property "sonar.projectName", "ActivityDiary"
+        property "sonar.projectVersion", "1.0"
+        property "sonar.exclusions", "robospice/**/*"
+        property "sonar.host.url", "http://localhost:9000" // TODO: - Setup your Sonarqube server address
+
+        property "sonar.sources", "src/main/java"
+        property "sonar.binaries", "build/intermediates/classes/debug"
+        property "sonar.java.binaries", "build/intermediates/classes/debug"
+        property "sonar.tests", "src/test/java, src/androidTest/java"
+        property "sonar.java.test.binaries", "build/intermediates/classes/debug"
+
+        def unit = fileTree(dir: project.projectDir, includes: ['**/*.exec']).files;
+        def ui = fileTree(dir: project.projectDir, includes: ['**/*.ec']).files;
+        unit.addAll(ui);
+        def files = unit.join(", ");
+
+        property "sonar.jacoco.reportPaths", files
+        property "sonar.java.coveragePlugin", "jacoco"
+        property "sonar.junit.reportsPath", "build/test-results/testDebugUnitTest"
+        property "sonar.android.lint.report", "build/reports/lint-results.xml"
     }
 }
 
@@ -34,3 +68,4 @@ ext {
 task clean(type: Delete) {
     delete rootProject.buildDir
 }
+

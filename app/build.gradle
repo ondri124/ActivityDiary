@@ -1,4 +1,5 @@
 apply plugin: 'com.android.application'
+apply plugin: 'jacoco-android'
 
 if (project.file('../ActivityDiarySigning.properties').exists()) {
     apply plugin: 'com.github.triplet.play'
@@ -26,7 +27,7 @@ if (project.file('../ActivityDiarySigning.properties').exists()) {
                 serviceAccountEmail = 'gplay-ramack@api-5226730847504381805-103625.iam.gserviceaccount.com'
                 pk12File = file('../gplay-developer-9607db552238.p12')
             }
-        }        
+        }
     }
     play {
         uploadImages = true
@@ -37,7 +38,7 @@ if (project.file('../ActivityDiarySigning.properties').exists()) {
 
 android {
     compileSdkVersion 27
-    buildToolsVersion '27.0.3'
+    buildToolsVersion '28.0.3'
     defaultConfig {
         applicationId "de.rampro.activitydiary"
         minSdkVersion 21
@@ -50,11 +51,14 @@ android {
             playAccountConfig = playAccountConfigs.defaultAccountConfig
         }
     }
+
     buildTypes {
         debug {
+            testCoverageEnabled = true
             applicationIdSuffix ".debug"
             versionNameSuffix "-debug"
         }
+
         rcTest {
             // to be used to create screenshots and alike
 //            signingConfig signingConfigs.release
@@ -80,11 +84,26 @@ android {
         sourceCompatibility JavaVersion.VERSION_1_8
         targetCompatibility JavaVersion.VERSION_1_8
     }
+
     testOptions {
-        unitTests {
-            includeAndroidResources = true
+        unitTests.all {
+            jacoco {
+                includeNoLocationClasses = true
+            }
         }
     }
+
+
+//    testOptions {
+//        unitTests.all {
+//            jacoco {
+//                includeNoLocationClasses = true
+//            }
+//        }
+//        unitTests {
+//            includeAndroidResources = true
+//        }
+//    }
 }
 
 dependencies {
@@ -119,3 +138,9 @@ dependencies {
     testImplementation 'org.robolectric:robolectric:3.6.1'
 }
 
+
+jacocoAndroidUnitTestReport {
+    csv.enabled false
+    html.enabled false
+    xml.enabled true
+}
